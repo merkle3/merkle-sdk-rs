@@ -1,0 +1,20 @@
+[workspace.package]
+version = "2.0.9"
+edition = "2021"
+rust-version = "1.65"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "transactions", 
+    "examples/*",
+]
+
+[workspace.dependencies]
+env_logger = "0.10.0"
+log = "0.4.19"
+futures = "0.3.25"
+reth-primitives = { git = "https://github.com/paradigmxyz/reth.git", tag = "v0.1.0-alpha.8" }
+thiserror = "1.0.40"
+tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
+tokio-stream = "0.1.14"
