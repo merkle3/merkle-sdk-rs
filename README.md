@@ -25,6 +25,8 @@ cargo run -p examples-transactions --example transactions
 
 ## Listen to transactions
 
+Get an API key for free at [mbs.merkle.io](https://mbs.merkle.io).
+
 ```rust
 use merkle_sdk_transactions::Connection;
 use futures::StreamExt;
