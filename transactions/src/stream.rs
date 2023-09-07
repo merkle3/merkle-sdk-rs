@@ -28,7 +28,6 @@ pub enum TxnStreamError {
 /// our exposed transaction stream.
 ///
 /// ```rust
-/// use std::env;
 ///
 /// use transactions::Connection;
 /// use futures::StreamExt;
