@@ -26,7 +26,7 @@ cargo run -p examples-transactions --example transactions
 ## Listen to transactions
 
 ```rust
-use transactions::Connection;
+use merkle_sdk_transactions::Connection;
 use futures::StreamExt;
 
 #[tokio::main]

@@ -30,7 +30,7 @@ pub enum TxnStreamError {
 ///
 /// ```rust
 ///
-/// use transactions::Connection;
+/// use merkle_sdk_transactions::Connection;
 /// use futures::StreamExt;
 ///
 /// #[tokio::main]

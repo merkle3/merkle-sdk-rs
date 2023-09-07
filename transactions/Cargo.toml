@@ -1,5 +1,5 @@
 [package]
-name = "transactions"
+name = "merkle-sdk-transactions"
 version = "0.1.0"
 edition = "2021"
 
