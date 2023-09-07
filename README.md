@@ -25,4 +25,18 @@ cargo run -p examples-transactions --example transactions
 
 ## Listen to transactions
 
-TODO
+```rust
+use transactions::Connection;
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() {
+    let api_key = "<SOME_API_KEY>";
+    if let Ok(conn) = Connection::from_key(api_key).await {
+        let mut stream = conn.into_stream();
+        while let Some(txn) = stream.next().await {
+            println!("{txn:?}");
+        }
+     }
+}
+```

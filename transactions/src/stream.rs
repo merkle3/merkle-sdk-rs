@@ -38,8 +38,8 @@ pub enum TxnStreamError {
 ///     let api_key = "<SOME_API_KEY>";
 ///     if let Ok(conn) = Connection::from_key(api_key).await {
 ///         let mut stream = conn.into_stream();
-///         while let Some(msg) = stream.next().await {
-///             println!("{msg:?}");
+///         while let Some(txn) = stream.next().await {
+///             println!("{txn:?}");
 ///         }
 ///      }
 /// }
