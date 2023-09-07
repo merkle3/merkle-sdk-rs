@@ -15,6 +15,7 @@ type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 type StreamItem = Result<Option<TransactionSignedEcRecovered>, TxnStreamError>;
 
 const TAG: &str = "transactions::stream";
+const BASE_URL: &str = "wss://txs.merkle.io/ws";
 
 #[derive(thiserror::Error, Debug)]
 pub enum TxnStreamError {
@@ -35,8 +36,7 @@ pub enum TxnStreamError {
 /// #[tokio::main]
 /// async fn main() {
 ///     let api_key = "<SOME_API_KEY>";
-///     let url = format!("wss://txs.merkle.io/ws/{api_key}");
-///     if let Ok(conn) = Connection::connect(url).await {
+///     if let Ok(conn) = Connection::from_key(api_key).await {
 ///         let mut stream = conn.into_stream();
 ///         while let Some(msg) = stream.next().await {
 ///             println!("{msg:?}");
@@ -51,8 +51,9 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub async fn connect<T: AsRef<str>>(url: T) -> Result<Self, TxnStreamError> {
-        let url = url.as_ref();
+    pub async fn from_key<T: AsRef<str>>(key: T) -> Result<Self, TxnStreamError> {
+        let key = key.as_ref();
+        let url = format!("{BASE_URL}/{key}");
         let (ws_stream, _) = connect_async(url).await?;
         let (_, rlp_stream) = ws_stream.split();
         Ok(Self {
@@ -125,8 +126,8 @@ mod tests {
 
     #[tokio::test]
     async fn can_handle_connection_error() {
-        let wrong_url = "wss://i'm a messed up url";
-        match Connection::connect(wrong_url).await {
+        let wrong_api_key = "foo";
+        match Connection::from_key(wrong_api_key).await {
             Err(crate::TxnStreamError::Connection(_)) => assert!(true),
             _ => unreachable!(),
         }
