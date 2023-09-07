@@ -1,3 +1,3 @@
 mod stream;
 
-pub use stream::{Connection, TxnsStream, TxnStreamError};
+pub use stream::{Connection, Transactions, TxnStreamError};

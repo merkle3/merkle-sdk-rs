@@ -1,7 +1,7 @@
 use std::env;
 
-use transactions::Connection;
 use futures::StreamExt;
+use transactions::Connection;
 
 #[tokio::main]
 async fn main() {
