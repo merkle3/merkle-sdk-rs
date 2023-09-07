@@ -1,1 +1,3 @@
-mod provider;
+mod stream;
+
+pub use stream::{Connection, TxnsStream, TxnStreamError};

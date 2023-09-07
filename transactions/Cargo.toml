@@ -10,6 +10,8 @@ env_logger = { workspace = true }
 log = { workspace = true }
 futures = { workspace = true }
 reth-primitives = { workspace = true }
+reth-rlp = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
+tokio-tungstenite = { workspace = true }
