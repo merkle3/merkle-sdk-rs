@@ -10,7 +10,7 @@ Add the following to your cargo.toml file:
 
 ```toml
 [dependencies]
-merkle-sdk = "0.0.2"
+merkle-sdk = "0.0.3"
 ```
 
 ## Examples
