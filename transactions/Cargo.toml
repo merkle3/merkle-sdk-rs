@@ -1,7 +1,10 @@
 [package]
 name = "merkle-sdk-transactions"
+description = "Utilities to access the Merkle's transactions network"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
