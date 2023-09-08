@@ -9,5 +9,6 @@ edition.workspace = true
 [dev-dependencies]
 log = { workspace = true }
 tokio = { workspace = true }
-merkle-sdk-transactions = { path = "../../transactions" }
 futures = { workspace = true }
+merkle-sdk = { path = "../../sdk" }
+

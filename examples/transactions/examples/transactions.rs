@@ -1,7 +1,7 @@
 use std::env;
 
 use futures::StreamExt;
-use merkle_sdk_transactions::Connection;
+use merkle_sdk::prelude::Connection;
 
 #[tokio::main]
 async fn main() {
