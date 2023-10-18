@@ -9,13 +9,14 @@ use log::{error, trace};
 use rlp::{Decodable, Rlp};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::error::Error;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+
+use crate::ConnectionBuilder;
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 type StreamItem = Result<Transaction, TxnStreamError>;
 
 const TAG: &str = "transactions::stream";
-const BASE_URL: &str = "wss://txs.merkle.io/ws";
 
 #[derive(thiserror::Error, Debug)]
 pub enum TxnStreamError {
@@ -47,20 +48,14 @@ pub enum TxnStreamError {
 pub struct Connection {
     /// This is the raw transactions stream
     /// receiving data from an upstream ws server
-    ws_stream: SplitStream<WsStream>,
+    pub(crate) ws_stream: SplitStream<WsStream>,
 }
 
 impl Connection {
-    pub async fn from_key<T: AsRef<str>>(key: T) -> Result<Self, TxnStreamError> {
-        let key = key.as_ref();
-        let url = format!("{BASE_URL}/{key}");
-        let (ws_stream, _) = connect_async(url).await?;
-        let (_, rlp_stream) = ws_stream.split();
-        Ok(Self {
-            ws_stream: rlp_stream,
-        })
-    }
 
+    pub fn with_key<T: AsRef<str>>(key: T) -> ConnectionBuilder  {
+        ConnectionBuilder::new(key)
+    }
     /// Converts the connection into a stream of transactions
     pub fn into_stream(self) -> Pin<Box<dyn Stream<Item = StreamItem> + Send>> {
         let stream = Transactions::from(self);
@@ -126,7 +121,8 @@ mod tests {
     #[tokio::test]
     async fn can_handle_connection_error() {
         let wrong_api_key = "foo";
-        match Connection::from_key(wrong_api_key).await {
+        let conn =  Connection::with_key(wrong_api_key).mainnet().build();
+        match conn.await {
             Err(crate::TxnStreamError::Connection(_)) => assert!(true),
             _ => unreachable!(),
         }
@@ -150,7 +146,7 @@ mod tests {
         };
 
         match txn_stream.next().await {
-            Some(Ok(Some(_tx))) => assert!(true),
+            Some(Ok(_tx)) => assert!(true),
             _ => unreachable!(),
         }
     }
