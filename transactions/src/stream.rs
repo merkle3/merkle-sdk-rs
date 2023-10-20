@@ -21,9 +21,26 @@ const TAG: &str = "transactions::stream";
 #[derive(thiserror::Error, Debug)]
 pub enum TxnStreamError {
     #[error("Connection error: {0}")]
-    Connection(#[from] tokio_tungstenite::tungstenite::Error),
+    Connection(String),
     #[error("Cannot decode transaction: {0}")]
     Decode(#[from] rlp::DecoderError),
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for TxnStreamError {
+    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
+        match e {
+            Error::Http(response) => {
+                let default_msg = "empty response".to_string();
+                if let Some(bytes) = response.body() {
+                    let msg = String::from_utf8(bytes.to_vec()).unwrap_or(default_msg);
+                    Self::Connection(msg)
+                } else {
+                    Self::Connection(default_msg)
+                }
+            }
+            _ => Self::Connection(e.to_string()),
+        }
+    }
 }
 
 /// Utility struct to acquire a connection to
@@ -36,13 +53,13 @@ pub enum TxnStreamError {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let api_key = "<SOME_API_KEY>";
-///     if let Ok(conn) = Connection::from_key(api_key).await {
+///     let api_key = "<API-KEY>";
+///     if let Ok(conn) = Connection::with_key(api_key).mainnet().build().await {
 ///         let mut stream = conn.into_stream();
-///         while let Some(txn) = stream.next().await {
-///             println!("{txn:?}");
+///         while let Some(msg) = stream.next().await {
+///             println!("{msg:?}");
 ///         }
-///      }
+///     }
 /// }
 /// ```
 pub struct Connection {
@@ -52,8 +69,7 @@ pub struct Connection {
 }
 
 impl Connection {
-
-    pub fn with_key<T: AsRef<str>>(key: T) -> ConnectionBuilder  {
+    pub fn with_key<T: AsRef<str>>(key: T) -> ConnectionBuilder {
         ConnectionBuilder::new(key)
     }
     /// Converts the connection into a stream of transactions
@@ -121,7 +137,7 @@ mod tests {
     #[tokio::test]
     async fn can_handle_connection_error() {
         let wrong_api_key = "foo";
-        let conn =  Connection::with_key(wrong_api_key).mainnet().build();
+        let conn = Connection::with_key(wrong_api_key).mainnet().build();
         match conn.await {
             Err(crate::TxnStreamError::Connection(_)) => assert!(true),
             _ => unreachable!(),

@@ -8,12 +8,11 @@ async fn main() {
     let api_key = env::var("API_KEY").expect("Provide an API KEY");
 
     let conn = Connection::with_key(api_key)
-        .base_url("ws://127.0.0.1")
-        .chain(1000)
+        .polygon()
         .build()
         .await
         .expect("connect");
-    
+
     let mut stream = conn.into_stream();
     while let Some(msg) = stream.next().await {
         println!("{msg:?}");
