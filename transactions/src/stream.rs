@@ -9,20 +9,38 @@ use log::{error, trace};
 use rlp::{Decodable, Rlp};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::error::Error;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+
+use crate::ConnectionBuilder;
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 type StreamItem = Result<Transaction, TxnStreamError>;
 
 const TAG: &str = "transactions::stream";
-const BASE_URL: &str = "wss://txs.merkle.io/ws";
 
 #[derive(thiserror::Error, Debug)]
 pub enum TxnStreamError {
     #[error("Connection error: {0}")]
-    Connection(#[from] tokio_tungstenite::tungstenite::Error),
+    Connection(String),
     #[error("Cannot decode transaction: {0}")]
     Decode(#[from] rlp::DecoderError),
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for TxnStreamError {
+    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
+        match e {
+            Error::Http(response) => {
+                let default_msg = "empty response".to_string();
+                if let Some(bytes) = response.body() {
+                    let msg = String::from_utf8(bytes.to_vec()).unwrap_or(default_msg);
+                    Self::Connection(msg)
+                } else {
+                    Self::Connection(default_msg)
+                }
+            }
+            _ => Self::Connection(e.to_string()),
+        }
+    }
 }
 
 /// Utility struct to acquire a connection to
@@ -35,32 +53,25 @@ pub enum TxnStreamError {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let api_key = "<SOME_API_KEY>";
-///     if let Ok(conn) = Connection::from_key(api_key).await {
+///     let api_key = "<API-KEY>";
+///     if let Ok(conn) = Connection::with_key(api_key).mainnet().build().await {
 ///         let mut stream = conn.into_stream();
-///         while let Some(txn) = stream.next().await {
-///             println!("{txn:?}");
+///         while let Some(msg) = stream.next().await {
+///             println!("{msg:?}");
 ///         }
-///      }
+///     }
 /// }
 /// ```
 pub struct Connection {
     /// This is the raw transactions stream
     /// receiving data from an upstream ws server
-    ws_stream: SplitStream<WsStream>,
+    pub(crate) ws_stream: SplitStream<WsStream>,
 }
 
 impl Connection {
-    pub async fn from_key<T: AsRef<str>>(key: T) -> Result<Self, TxnStreamError> {
-        let key = key.as_ref();
-        let url = format!("{BASE_URL}/{key}");
-        let (ws_stream, _) = connect_async(url).await?;
-        let (_, rlp_stream) = ws_stream.split();
-        Ok(Self {
-            ws_stream: rlp_stream,
-        })
+    pub fn with_key<T: AsRef<str>>(key: T) -> ConnectionBuilder {
+        ConnectionBuilder::new(key)
     }
-
     /// Converts the connection into a stream of transactions
     pub fn into_stream(self) -> Pin<Box<dyn Stream<Item = StreamItem> + Send>> {
         let stream = Transactions::from(self);
@@ -126,7 +137,8 @@ mod tests {
     #[tokio::test]
     async fn can_handle_connection_error() {
         let wrong_api_key = "foo";
-        match Connection::from_key(wrong_api_key).await {
+        let conn = Connection::with_key(wrong_api_key).mainnet().build();
+        match conn.await {
             Err(crate::TxnStreamError::Connection(_)) => assert!(true),
             _ => unreachable!(),
         }
@@ -150,7 +162,7 @@ mod tests {
         };
 
         match txn_stream.next().await {
-            Some(Ok(Some(_tx))) => assert!(true),
+            Some(Ok(_tx)) => assert!(true),
             _ => unreachable!(),
         }
     }

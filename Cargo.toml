@@ -17,7 +17,7 @@ futures = "0.3.25"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
 tokio-stream = "0.1.14"
-tokio-tungstenite = { version = "0.19.0", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.20.1", features = ["native-tls"] }
 
 # workspace crates
 merkle-sdk-transactions = { version = "0.0.3", path = "transactions" }
