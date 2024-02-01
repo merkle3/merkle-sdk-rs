@@ -3,10 +3,10 @@ use std::{
     task::{Context, Poll},
 };
 
-use ethers::types::Transaction;
+use ethers::types::transaction::eip2718::{TypedTransaction, TypedTransactionError};
 use futures::{stream::SplitStream, Stream, StreamExt};
 use log::{error, trace};
-use rlp::{Decodable, Rlp};
+use rlp::Rlp;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::error::Error;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
@@ -14,7 +14,7 @@ use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use crate::ConnectionBuilder;
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
-type StreamItem = Result<Transaction, TxnStreamError>;
+type StreamItem = Result<TypedTransaction, TxnStreamError>;
 
 const TAG: &str = "transactions::stream";
 
@@ -23,7 +23,7 @@ pub enum TxnStreamError {
     #[error("Connection error: {0}")]
     Connection(String),
     #[error("Cannot decode transaction: {0}")]
-    Decode(#[from] rlp::DecoderError),
+    Decode(#[from] TypedTransactionError),
 }
 
 impl From<tokio_tungstenite::tungstenite::Error> for TxnStreamError {
@@ -101,8 +101,8 @@ impl Stream for Transactions {
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.inner.poll_next_unpin(cx) {
             Poll::Ready(msg) => match msg {
-                Some(Ok(bytes)) => match Transaction::decode(&Rlp::new(&bytes[..])) {
-                    Ok(tx) => {
+                Some(Ok(bytes)) => match TypedTransaction::decode_signed(&Rlp::new(&bytes[..])) {
+                    Ok((tx, _signature)) => {
                         trace!(target: TAG, "Got txn {tx:?}");
                         Poll::Ready(Some(Ok(tx)))
                     }
