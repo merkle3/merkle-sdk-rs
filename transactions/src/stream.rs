@@ -11,10 +11,10 @@ use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::error::Error;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
-use crate::ConnectionBuilder;
+use crate::{ConnectionBuilder, Transaction};
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
-type StreamItem = Result<TypedTransaction, TxnStreamError>;
+type StreamItem = Result<Transaction, TxnStreamError>;
 
 const TAG: &str = "transactions::stream";
 
@@ -102,9 +102,12 @@ impl Stream for Transactions {
         match self.inner.poll_next_unpin(cx) {
             Poll::Ready(msg) => match msg {
                 Some(Ok(bytes)) => match TypedTransaction::decode_signed(&Rlp::new(&bytes[..])) {
-                    Ok((tx, _signature)) => {
+                    Ok((tx, signature)) => {
                         trace!(target: TAG, "Got txn {tx:?}");
-                        Poll::Ready(Some(Ok(tx)))
+                        Poll::Ready(Some(Ok(Transaction {
+                            inner: tx,
+                            signature,
+                        })))
                     }
                     Err(e) => {
                         let err = Err(TxnStreamError::Decode(e));

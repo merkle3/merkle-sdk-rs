@@ -1,6 +1,6 @@
 [workspace.package]
 description = "A Rust library for seamless integration with Merkle's services."
-version = "0.0.6"
+version = "0.0.7"
 edition = "2021"
 rust-version = "1.65"
 repository = "https://github.com/merkle3/merkle-sdk-rs"
@@ -20,4 +20,4 @@ tokio-stream = "0.1.14"
 tokio-tungstenite = { version = "0.20.1", features = ["native-tls"] }
 
 # workspace crates
-merkle-sdk-transactions = { version = "0.0.6", path = "transactions" }
+merkle-sdk-transactions = { version = "0.0.7", path = "transactions" }

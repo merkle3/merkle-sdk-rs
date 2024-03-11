@@ -55,7 +55,7 @@ impl ConnectionBuilder {
     /// Sets the connection's base url. This is generally not required
     /// but we leave this setting open to increase flexibility.
     /// Example:
-    /// 
+    ///
     /// ```rust
     ///
     /// use merkle_sdk_transactions::Connection;
@@ -77,7 +77,6 @@ impl ConnectionBuilder {
         self
     }
 
-    
     pub fn mainnet(mut self) -> Self {
         self.chain = ChainName::Mainnet.as_u64();
         self
