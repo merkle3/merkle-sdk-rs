@@ -1,6 +1,6 @@
 ## [0.0.7] - 2024-03-11
 ### Changed
-- Tx stream emits signatures along with transactions (#1234).
+- Tx stream emits signatures along with transactions (#4).
 
 <!-- Item Template -->
 <!-- ## [0.0.0] - 2024-03-10
